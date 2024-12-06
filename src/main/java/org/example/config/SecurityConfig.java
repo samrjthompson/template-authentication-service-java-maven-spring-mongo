@@ -3,14 +3,16 @@ package org.example.config;
 import java.util.List;
 import org.example.security.CsrfTokenLogger;
 import org.example.security.RequestValidationFilter;
+import org.example.security.Sha512PasswordEncoder;
 import org.example.security.UserAuthorities;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CsrfFilter;
@@ -24,13 +26,11 @@ public class SecurityConfig {
     private static final String READ_AUTHORITY = UserAuthorities.fromValue(UserAuthorities.READ);
 
     private final RequestValidationFilter requestValidationFilter;
-    private final AuthenticationProvider customAuthenticationProvider;
     private final int port;
 
     public SecurityConfig(RequestValidationFilter requestValidationFilter,
-                          AuthenticationProvider customAuthenticationProvider, @Value("${server.port}") int port) {
+                          @Value("${server.port}") int port) {
         this.requestValidationFilter = requestValidationFilter;
-        this.customAuthenticationProvider = customAuthenticationProvider;
         this.port = port;
     }
 
@@ -54,11 +54,10 @@ public class SecurityConfig {
 
         // Temporarily disabled for testing
         http.csrf(
-                c -> c.disable()
+                AbstractHttpConfigurer::disable
         );
 
         http.httpBasic(Customizer.withDefaults());
-        http.authenticationProvider(customAuthenticationProvider);
         http.authorizeHttpRequests(
                 c -> c
                         .requestMatchers(HttpMethod.GET, "/hello").hasAnyAuthority(WRITE_AUTHORITY, READ_AUTHORITY)
@@ -69,5 +68,10 @@ public class SecurityConfig {
         );
 
         return http.build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new Sha512PasswordEncoder();
     }
 }
