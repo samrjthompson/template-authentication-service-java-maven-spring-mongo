@@ -3,6 +3,7 @@ package org.example.security;
 import static org.example.Main.NAMESPACE;
 
 import java.util.Optional;
+import org.example.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;

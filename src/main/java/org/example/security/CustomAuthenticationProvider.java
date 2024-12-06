@@ -1,6 +1,7 @@
 package org.example.security;
 
 import java.util.List;
+import org.example.model.User;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

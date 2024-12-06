@@ -4,7 +4,7 @@ import java.util.List;
 import org.example.security.CsrfTokenLogger;
 import org.example.security.RequestValidationFilter;
 import org.example.security.Sha512PasswordEncoder;
-import org.example.security.UserAuthorities;
+import org.example.model.UserAuthorities;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -63,7 +63,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/hello").hasAnyAuthority(WRITE_AUTHORITY, READ_AUTHORITY)
                         .requestMatchers(HttpMethod.POST, "/hello").hasAnyAuthority(WRITE_AUTHORITY)
                         .requestMatchers(HttpMethod.GET, "/hello/private").hasAnyAuthority(WRITE_AUTHORITY)
-                        .requestMatchers(HttpMethod.GET, "/healthcheck").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/register").permitAll()
                         .anyRequest().authenticated() // All other requests require authentication
         );
 
