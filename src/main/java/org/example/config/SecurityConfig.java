@@ -60,9 +60,11 @@ public class SecurityConfig {
         http.httpBasic(Customizer.withDefaults());
         http.authenticationProvider(customAuthenticationProvider);
         http.authorizeHttpRequests(
-                c -> c.requestMatchers(HttpMethod.GET, "/hello").hasAnyAuthority(WRITE_AUTHORITY, READ_AUTHORITY)
+                c -> c
+                        .requestMatchers(HttpMethod.GET, "/hello").hasAnyAuthority(WRITE_AUTHORITY, READ_AUTHORITY)
                         .requestMatchers(HttpMethod.POST, "/hello").hasAnyAuthority(WRITE_AUTHORITY)
                         .requestMatchers(HttpMethod.GET, "/hello/private").hasAnyAuthority(WRITE_AUTHORITY)
+                        .requestMatchers(HttpMethod.GET, "/healthcheck").permitAll()
                         .anyRequest().authenticated() // All other requests require authentication
         );
 
