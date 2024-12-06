@@ -16,7 +16,7 @@ public class MongoConfig implements InitializingBean {
 
     // Remove _class field from data
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         mappingMongoConverter.setTypeMapper(new DefaultMongoTypeMapper(null));
     }
 }
