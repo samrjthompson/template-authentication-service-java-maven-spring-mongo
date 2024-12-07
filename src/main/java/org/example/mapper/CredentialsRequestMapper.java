@@ -48,12 +48,4 @@ public class CredentialsRequestMapper {
                         .at(now)
                         .by(MDC.get("request_id")));
     }
-
-    public User mapExistingUser(CredentialsRequest credentialsRequest) {
-        return new User()
-                .username(credentialsRequest.username())
-                .password(credentialsRequest.password())
-                .authority(credentialsRequest.authority())
-                .enabled(true);
-    }
 }
