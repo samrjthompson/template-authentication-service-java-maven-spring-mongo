@@ -55,10 +55,10 @@ class CredentialsUpdateMapperTest {
         when(instantSupplier.get()).thenReturn(NOW);
 
         // when
-        Update actual = credentialsUpdateMapper.mapUpdate(arguments.getCredentialsRequest());
+        Update actual = credentialsUpdateMapper.mapUpdate(arguments.credentialsRequest());
 
         // then
-        assertEquals(arguments.getExpectedUpdate(), actual);
+        assertEquals(arguments.expectedUpdate(), actual);
     }
 
     @ParameterizedTest
@@ -68,16 +68,16 @@ class CredentialsUpdateMapperTest {
         when(instantSupplier.get()).thenReturn(NOW);
 
         // when
-        Update actual = credentialsUpdateMapper.mapUpdate(arguments.getCredentialsRequest());
+        Update actual = credentialsUpdateMapper.mapUpdate(arguments.credentialsRequest());
 
         // then
-        assertEquals(arguments.getExpectedUpdate(), actual);
+        assertEquals(arguments.expectedUpdate(), actual);
     }
 
     private static Stream<Arguments> updatePasswordArguments() {
         return Stream.of(
                 Arguments.of(Named.of("Update password, authority, and isEnabled",
-                                UpdateArguments.Builder.builder()
+                                UpdateArguments.builder()
                                         .expectedUpdate(new Update()
                                                 .set("password", PASSWORD)
                                                 .set("salt", SALT)
@@ -96,7 +96,7 @@ class CredentialsUpdateMapperTest {
                         )
                 ),
                 Arguments.of(Named.of("Update password and authority",
-                                UpdateArguments.Builder.builder()
+                                UpdateArguments.builder()
                                         .expectedUpdate(new Update()
                                                 .set("password", PASSWORD)
                                                 .set("salt", SALT)
@@ -114,7 +114,7 @@ class CredentialsUpdateMapperTest {
                         )
                 ),
                 Arguments.of(Named.of("Update password",
-                                UpdateArguments.Builder.builder()
+                                UpdateArguments.builder()
                                         .expectedUpdate(new Update()
                                                 .set("password", PASSWORD)
                                                 .set("salt", SALT)
@@ -130,7 +130,7 @@ class CredentialsUpdateMapperTest {
                         )
                 ),
                 Arguments.of(Named.of("Update password and isEnabled",
-                                UpdateArguments.Builder.builder()
+                                UpdateArguments.builder()
                                         .expectedUpdate(new Update()
                                                 .set("password", PASSWORD)
                                                 .set("salt", SALT)
@@ -152,7 +152,7 @@ class CredentialsUpdateMapperTest {
     private static Stream<Arguments> nonPasswordUpdateArguments() {
         return Stream.of(
                 Arguments.of(Named.of("Update authority and isEnabled",
-                                UpdateArguments.Builder.builder()
+                                UpdateArguments.builder()
                                         .expectedUpdate(new Update()
                                                 .set("authority", AUTHORITY)
                                                 .set("isEnabled", true)
@@ -168,7 +168,7 @@ class CredentialsUpdateMapperTest {
                         )
                 ),
                 Arguments.of(Named.of("Update authority",
-                                UpdateArguments.Builder.builder()
+                                UpdateArguments.builder()
                                         .expectedUpdate(new Update()
                                                 .set("authority", AUTHORITY)
                                                 .set("isEnabled", true)
@@ -183,7 +183,7 @@ class CredentialsUpdateMapperTest {
                         )
                 ),
                 Arguments.of(Named.of("Update isEnabled",
-                                UpdateArguments.Builder.builder()
+                                UpdateArguments.builder()
                                         .expectedUpdate(new Update()
                                                 .set("isEnabled", false)
                                                 .set("updated", new Updated()
@@ -199,35 +199,16 @@ class CredentialsUpdateMapperTest {
         );
     }
 
-    private static class UpdateArguments {
+    private record UpdateArguments(Update expectedUpdate, CredentialsRequest credentialsRequest) {
 
-        private final Update expectedUpdate;
-        private final CredentialsRequest credentialsRequest;
-
-        private UpdateArguments(Builder builder) {
-            expectedUpdate = builder.expectedUpdate;
-            credentialsRequest = builder.credentialsRequest;
+        public static Builder builder() {
+            return new Builder();
         }
 
-        public Update getExpectedUpdate() {
-            return expectedUpdate;
-        }
-
-        public CredentialsRequest getCredentialsRequest() {
-            return credentialsRequest;
-        }
-
-        public static final class Builder {
+        public static class Builder {
 
             private Update expectedUpdate;
             private CredentialsRequest credentialsRequest;
-
-            private Builder() {
-            }
-
-            public static Builder builder() {
-                return new Builder();
-            }
 
             public Builder expectedUpdate(Update update) {
                 this.expectedUpdate = update;
@@ -240,7 +221,7 @@ class CredentialsUpdateMapperTest {
             }
 
             public UpdateArguments build() {
-                return new UpdateArguments(this);
+                return new UpdateArguments(expectedUpdate, credentialsRequest);
             }
         }
     }
