@@ -1,8 +1,7 @@
 package org.example.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
 
 import org.example.model.request.CredentialsRequest;
 import org.example.service.CredentialsService;
@@ -29,12 +28,25 @@ class ControllerTest {
     void shouldSuccessfullyInsertCredentials() {
         // given
         ResponseEntity<Void> expected = ResponseEntity.ok().build();
-        doNothing().when(credentialsService).insertCredentials(any());
 
         // when
         ResponseEntity<Void> actual = controller.insertCredentials(requestBody);
 
         // then
         assertEquals(expected, actual);
+        verify(credentialsService).insertCredentials(requestBody);
+    }
+
+    @Test
+    void shouldSuccessfullyUpdateExistingCredentials() {
+        // given
+        ResponseEntity<Void> expected = ResponseEntity.ok().build();
+
+        // when
+        ResponseEntity<Void> actual = controller.updateCredentials(requestBody);
+
+        // then
+        assertEquals(expected, actual);
+        verify(credentialsService).updateCredentials(requestBody);
     }
 }

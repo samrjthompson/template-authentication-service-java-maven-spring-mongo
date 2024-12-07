@@ -10,7 +10,9 @@ import static org.mockito.Mockito.when;
 
 import org.example.exception.ConflictException;
 import org.example.exception.InvalidAuthorityException;
+import org.example.exception.NotFoundException;
 import org.example.mapper.CredentialsRequestMapper;
+import org.example.mapper.CredentialsUpdateMapper;
 import org.example.model.User;
 import org.example.model.request.CredentialsRequest;
 import org.example.repository.Repository;
@@ -21,6 +23,7 @@ import org.junit.jupiter.api.function.Executable;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.mongodb.core.query.Update;
 
 @ExtendWith(MockitoExtension.class)
 class CredentialsServiceTest {
@@ -34,7 +37,9 @@ class CredentialsServiceTest {
     private CredentialsService service;
 
     @Mock
-    private CredentialsRequestMapper mapper;
+    private CredentialsRequestMapper credentialsRequestMapper;
+    @Mock
+    private CredentialsUpdateMapper credentialsUpdateMapper;
     @Mock
     private Repository repository;
 
@@ -42,6 +47,8 @@ class CredentialsServiceTest {
     private CredentialsRequest requestBody;
     @Mock
     private User user;
+    @Mock
+    private Update update;
 
     @Test
     void shouldInsertNewCredentials() {
@@ -49,7 +56,7 @@ class CredentialsServiceTest {
         when(requestBody.authority()).thenReturn(AUTHORITY);
         when(requestBody.username()).thenReturn(USERNAME);
         when(repository.findById(anyString())).thenReturn(null);
-        when(mapper.mapNewUser(any())).thenReturn(user);
+        when(credentialsRequestMapper.mapNewUser(any())).thenReturn(user);
 
         // when
         service.insertCredentials(requestBody);
@@ -85,5 +92,37 @@ class CredentialsServiceTest {
         // then
         assertThrows(InvalidAuthorityException.class, executable);
         verifyNoInteractions(repository);
+    }
+
+    @Test
+    void shouldUpdateExistingCredentials() {
+        // given
+        when(requestBody.username()).thenReturn(USERNAME);
+        when(repository.findById(anyString())).thenReturn(user);
+        when(credentialsUpdateMapper.mapUpdate(any())).thenReturn(update);
+
+        // when
+        service.updateCredentials(requestBody);
+
+        // then
+        verify(repository).findById(ENCODED_USERNAME);
+        verify(credentialsUpdateMapper).mapUpdate(requestBody);
+        verify(repository).update(ENCODED_USERNAME, update);
+    }
+
+    @Test
+    void shouldThrowNotFoundExceptionWhenUserDoesNotExist() {
+        // given
+        when(requestBody.username()).thenReturn(USERNAME);
+        when(repository.findById(anyString())).thenReturn(null);
+
+        // when
+        Executable executable = () -> service.updateCredentials(requestBody);
+
+        // then
+        assertThrows(NotFoundException.class, executable);
+        verify(repository).findById(ENCODED_USERNAME);
+        verifyNoMoreInteractions(repository);
+        verifyNoInteractions(credentialsUpdateMapper);
     }
 }

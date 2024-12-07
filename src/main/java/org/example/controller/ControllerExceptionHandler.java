@@ -2,8 +2,10 @@ package org.example.controller;
 
 import static org.example.Main.NAMESPACE;
 
+import org.example.exception.BadGatewayException;
 import org.example.exception.ConflictException;
 import org.example.exception.InvalidAuthorityException;
+import org.example.exception.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -15,6 +17,22 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 public class ControllerExceptionHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NAMESPACE);
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<Void> handleNotFoundException(Exception ex) {
+        LOGGER.error("404 Not Found exception", ex);
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .build();
+    }
+
+    @ExceptionHandler(BadGatewayException.class)
+    public ResponseEntity<Void> handleBadGatewayException(Exception ex) {
+        LOGGER.error("502 Bad Gateway exception", ex);
+        return ResponseEntity
+                .status(HttpStatus.BAD_GATEWAY)
+                .build();
+    }
 
     @ExceptionHandler(InvalidAuthorityException.class)
     public ResponseEntity<Void> handleBadRequestException(Exception ex) {

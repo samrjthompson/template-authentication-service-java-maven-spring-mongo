@@ -4,7 +4,9 @@ import static org.example.Main.NAMESPACE;
 
 import java.util.Optional;
 import org.example.exception.ConflictException;
+import org.example.exception.NotFoundException;
 import org.example.mapper.CredentialsRequestMapper;
+import org.example.mapper.CredentialsUpdateMapper;
 import org.example.model.UserAuthorities;
 import org.example.model.request.CredentialsRequest;
 import org.example.repository.Repository;
@@ -21,17 +23,19 @@ public class CredentialsService {
     private static final String FAILED_UPDATE_MSG = "Failed to update new user. Username [{}] already exists in DB.";
 
     private final CredentialsRequestMapper credentialsRequestMapper;
+    private final CredentialsUpdateMapper credentialsUpdateMapper;
     private final Repository repository;
 
-    public CredentialsService(CredentialsRequestMapper credentialsRequestMapper, Repository repository) {
+    public CredentialsService(CredentialsRequestMapper credentialsRequestMapper,
+                              CredentialsUpdateMapper credentialsUpdateMapper, Repository repository) {
         this.credentialsRequestMapper = credentialsRequestMapper;
+        this.credentialsUpdateMapper = credentialsUpdateMapper;
         this.repository = repository;
     }
 
     public void insertCredentials(CredentialsRequest requestBody) {
         LOGGER.info("Inserting credentials");
-
-        validateAuthorityString(requestBody.authority());
+        UserAuthorities.validate(requestBody.authority());
 
         final String username = requestBody.username();
         final String id = EncoderUtils.encodeUsernameIntoMongoId(username);
@@ -44,18 +48,15 @@ public class CredentialsService {
 
     public void updateCredentials(CredentialsRequest requestBody) {
         LOGGER.info("Updating credentials");
-
-        validateAuthorityString(requestBody.authority());
-
         final String username = requestBody.username();
-        Optional.ofNullable(repository.findById(username))
+        final String id = EncoderUtils.encodeUsernameIntoMongoId(username);
+        Optional.ofNullable(repository.findById(id))
                 .ifPresentOrElse(user -> {
-                    LOGGER.info(FAILED_UPDATE_MSG, username);
-                    throw new RuntimeException();
-                }, () -> repository.insert(credentialsRequestMapper.mapNewUser(requestBody)));
-    }
-
-    private static void validateAuthorityString(final String authority) {
-        UserAuthorities.validate(authority);
+                    LOGGER.info("User found - updating credentials");
+                    repository.update(id, credentialsUpdateMapper.mapUpdate(requestBody));
+                }, () -> {
+                    LOGGER.error("Record not found in DB with id: [{}]", id);
+                    throw new NotFoundException("Record not found in DB");
+                });
     }
 }

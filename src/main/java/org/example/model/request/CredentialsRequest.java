@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
 @JsonDeserialize(builder = CredentialsRequest.Builder.class)
-public record CredentialsRequest(String username, String password, String authority) {
+public record CredentialsRequest(String username, String password, String authority, Boolean isEnabled) {
 
     public static Builder builder() {
         return new Builder();
@@ -20,24 +20,31 @@ public record CredentialsRequest(String username, String password, String author
         private String password;
         @JsonProperty
         private String authority;
+        @JsonProperty
+        private Boolean isEnabled = true; // Defaulted to true if not specified
 
-        private Builder username(String username) {
+        public Builder username(String username) {
             this.username = username;
             return this;
         }
 
-        private Builder password(String password) {
+        public Builder password(String password) {
             this.password = password;
             return this;
         }
 
-        private Builder authority(String authority) {
+        public Builder authority(String authority) {
             this.authority = authority;
             return this;
         }
 
+        public Builder isEnabled(Boolean isEnabled) {
+            this.isEnabled = isEnabled;
+            return this;
+        }
+
         public CredentialsRequest build() {
-            return new CredentialsRequest(username, password, authority);
+            return new CredentialsRequest(username, password, authority, isEnabled);
         }
     }
 }

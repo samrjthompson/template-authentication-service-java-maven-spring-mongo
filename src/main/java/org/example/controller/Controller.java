@@ -24,8 +24,7 @@ public class Controller {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Void> insertCredentials(
-            @RequestBody CredentialsRequest requestBody) {
+    public ResponseEntity<Void> insertCredentials(@RequestBody CredentialsRequest requestBody) {
         LOGGER.info("Received insert credentials request");
 
         credentialsService.insertCredentials(requestBody);
@@ -35,8 +34,10 @@ public class Controller {
     }
 
     @PatchMapping("/register")
-    public ResponseEntity<Void> updateCredentials() {
+    public ResponseEntity<Void> updateCredentials(@RequestBody CredentialsRequest requestBody) {
         LOGGER.info("Received update credentials request");
+
+        credentialsService.updateCredentials(requestBody);
 
         LOGGER.info("Successfully updated credentials");
         return ResponseEntity.ok().build();
