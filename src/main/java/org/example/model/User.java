@@ -3,6 +3,7 @@ package org.example.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.GrantedAuthority;
@@ -19,6 +20,8 @@ public class User implements UserDetails {
     private String authority;
     private boolean isEnabled;
     private String salt;
+    private Updated updated;
+    private Created created;
 
     public String getId() {
         return id;
@@ -62,6 +65,24 @@ public class User implements UserDetails {
         return this;
     }
 
+    public Updated getUpdated() {
+        return updated;
+    }
+
+    public User updated(Updated updated) {
+        this.updated = updated;
+        return this;
+    }
+
+    public Created getCreated() {
+        return created;
+    }
+
+    public User created(Created created) {
+        this.created = created;
+        return this;
+    }
+
     @Override
     public String getUsername() {
         return username;
@@ -95,5 +116,22 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return isEnabled;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        User user = (User) o;
+        return isEnabled == user.isEnabled && Objects.equals(id, user.id) && Objects.equals(username,
+                user.username) && Objects.equals(password, user.password) && Objects.equals(authority,
+                user.authority) && Objects.equals(salt, user.salt) && Objects.equals(updated,
+                user.updated) && Objects.equals(created, user.created);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, username, password, authority, isEnabled, salt, updated, created);
     }
 }

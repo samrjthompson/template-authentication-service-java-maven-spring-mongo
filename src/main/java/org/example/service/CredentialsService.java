@@ -3,10 +3,12 @@ package org.example.service;
 import static org.example.Main.NAMESPACE;
 
 import java.util.Optional;
+import org.example.exception.ConflictException;
 import org.example.mapper.CredentialsRequestMapper;
 import org.example.model.UserAuthorities;
 import org.example.model.request.CredentialsRequest;
 import org.example.repository.Repository;
+import org.example.util.EncoderUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -15,6 +17,8 @@ import org.springframework.stereotype.Component;
 public class CredentialsService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NAMESPACE);
+    private static final String FAILED_INSERT_MSG = "Failed to insert new user. Username [{}] already exists in DB.";
+    private static final String FAILED_UPDATE_MSG = "Failed to update new user. Username [{}] already exists in DB.";
 
     private final CredentialsRequestMapper credentialsRequestMapper;
     private final Repository repository;
@@ -30,11 +34,12 @@ public class CredentialsService {
         validateAuthorityString(requestBody.authority());
 
         final String username = requestBody.username();
-        Optional.ofNullable(repository.findByUsername(username))
+        final String id = EncoderUtils.encodeUsernameIntoMongoId(username);
+        Optional.ofNullable(repository.findById(id))
                 .ifPresentOrElse(user -> {
-                    LOGGER.info("Failed to insert new user. Username [{}] already exists in DB.", username);
-                    throw new RuntimeException();
-                }, () -> repository.save(credentialsRequestMapper.mapNewUser(requestBody)));
+                    LOGGER.error(FAILED_INSERT_MSG, username);
+                    throw new ConflictException("Username already present in DB");
+                }, () -> repository.insert(credentialsRequestMapper.mapNewUser(requestBody)));
     }
 
     public void updateCredentials(CredentialsRequest requestBody) {
@@ -43,11 +48,11 @@ public class CredentialsService {
         validateAuthorityString(requestBody.authority());
 
         final String username = requestBody.username();
-        Optional.ofNullable(repository.findByUsername(username))
+        Optional.ofNullable(repository.findById(username))
                 .ifPresentOrElse(user -> {
-                    LOGGER.info("Failed to insert new user. Username [{}] already exists in DB.", username);
+                    LOGGER.info(FAILED_UPDATE_MSG, username);
                     throw new RuntimeException();
-                }, () -> repository.save(credentialsRequestMapper.mapNewUser(requestBody)));
+                }, () -> repository.insert(credentialsRequestMapper.mapNewUser(requestBody)));
     }
 
     private static void validateAuthorityString(final String authority) {

@@ -8,8 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.TransientDataAccessException;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -23,9 +21,20 @@ public class Repository {
         this.mongoTemplate = mongoTemplate;
     }
 
-    public void save(User user) {
+    public void insert(User user) {
         try {
-            mongoTemplate.save(user);
+            mongoTemplate.insert(user);
+            LOGGER.info("Credentials successfully inserted into MongoDB");
+        } catch (TransientDataAccessException ex) {
+            LOGGER.error("Failed to save credentials to DB. Recoverable error when accessing MongoDB.", ex);
+        } catch (DataAccessException ex) {
+            LOGGER.error("Failed to save credentials to DB. Non-recoverable error when accessing MongoDB.", ex);
+        }
+    }
+
+    public void update(User user) {
+        try {
+//            mongoTemplate.updateFirst(user);
             LOGGER.info("Credentials successfully saved to MongoDB");
         } catch (TransientDataAccessException ex) {
             LOGGER.error("Failed to save credentials to DB. Recoverable error when accessing MongoDB.", ex);
@@ -34,10 +43,7 @@ public class Repository {
         }
     }
 
-    public User findByUsername(String username) {
-        Query query = new Query()
-                .addCriteria(Criteria.where("username").is(username));
-
-        return mongoTemplate.findOne(query, User.class);
+    public User findById(final String id) {
+        return mongoTemplate.findById(id, User.class);
     }
 }
