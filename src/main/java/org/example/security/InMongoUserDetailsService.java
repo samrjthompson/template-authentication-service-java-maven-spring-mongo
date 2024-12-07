@@ -4,6 +4,7 @@ import static org.example.Main.NAMESPACE;
 
 import java.util.Optional;
 import org.example.model.User;
+import org.example.util.EncoderUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -25,7 +26,8 @@ public class InMongoUserDetailsService implements UserDetailsService {
 
     @Override
     public User loadUserByUsername(final String username) throws UsernameNotFoundException {
-        return Optional.ofNullable(mongoTemplate.findById(username, User.class))
+        final String id = EncoderUtils.encodeUsernameIntoMongoId(username);
+        return Optional.ofNullable(mongoTemplate.findById(id, User.class))
                 .orElseGet(() -> {
                     final String msg = USERNAME_NOT_FOUND.formatted(username);
                     LOGGER.error(msg);

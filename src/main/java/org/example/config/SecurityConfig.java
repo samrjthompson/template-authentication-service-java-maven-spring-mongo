@@ -22,6 +22,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 @Configuration
 public class SecurityConfig {
 
+    private static final String ADMIN_AUTHORITY = UserAuthorities.fromValue(UserAuthorities.ADMIN);
     private static final String WRITE_AUTHORITY = UserAuthorities.fromValue(UserAuthorities.WRITE);
     private static final String READ_AUTHORITY = UserAuthorities.fromValue(UserAuthorities.READ);
 
@@ -60,10 +61,8 @@ public class SecurityConfig {
         http.httpBasic(Customizer.withDefaults());
         http.authorizeHttpRequests(
                 c -> c
-                        .requestMatchers(HttpMethod.GET, "/hello").hasAnyAuthority(WRITE_AUTHORITY, READ_AUTHORITY)
-                        .requestMatchers(HttpMethod.POST, "/hello").hasAnyAuthority(WRITE_AUTHORITY)
-                        .requestMatchers(HttpMethod.GET, "/hello/private").hasAnyAuthority(WRITE_AUTHORITY)
-                        .requestMatchers(HttpMethod.POST, "/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/register").hasAnyAuthority(ADMIN_AUTHORITY)
+                        .requestMatchers(HttpMethod.PATCH, "/register").hasAnyAuthority(ADMIN_AUTHORITY)
                         .anyRequest().authenticated() // All other requests require authentication
         );
 

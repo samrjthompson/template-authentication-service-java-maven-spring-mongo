@@ -1,9 +1,10 @@
 package org.example.model;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.Objects;
 
-public class Created {
+public class Created implements Serializable {
 
     private Instant at;
     private String by;

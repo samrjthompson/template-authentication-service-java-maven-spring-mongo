@@ -31,7 +31,8 @@ public enum UserAuthorities {
 
     public static UserAuthorities fromString(String authority) {
         return BY_AUTHORITY_TYPE.computeIfAbsent(authority, k -> {
-            throw new RuntimeException("Invalid authority type");
+            LOGGER.error("Invalid authority type: [{}]", authority);
+            throw new InvalidAuthorityException("Invalid authority type");
         });
     }
 
