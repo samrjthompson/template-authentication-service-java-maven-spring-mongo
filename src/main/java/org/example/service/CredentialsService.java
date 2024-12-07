@@ -20,7 +20,6 @@ public class CredentialsService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NAMESPACE);
     private static final String FAILED_INSERT_MSG = "Failed to insert new user. Username [{}] already exists in DB.";
-    private static final String FAILED_UPDATE_MSG = "Failed to update new user. Username [{}] already exists in DB.";
 
     private final CredentialsRequestMapper credentialsRequestMapper;
     private final CredentialsUpdateMapper credentialsUpdateMapper;

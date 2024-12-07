@@ -21,7 +21,7 @@ public record CredentialsRequest(String username, String password, String author
         @JsonProperty
         private String authority;
         @JsonProperty
-        private Boolean isEnabled = true; // Defaulted to true if not specified
+        private Boolean isEnabled = true; // Defaults to true if not specified
 
         public Builder username(String username) {
             this.username = username;
