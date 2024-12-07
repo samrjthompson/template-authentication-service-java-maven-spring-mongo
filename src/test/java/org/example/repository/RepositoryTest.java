@@ -43,6 +43,6 @@ class RepositoryTest {
         repository.findById(ID);
 
         // then
-        mongoTemplate.findById(ID, User.class);
+        verify(mongoTemplate).findById(ID, User.class);
     }
 }
