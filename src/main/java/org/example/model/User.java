@@ -16,14 +16,22 @@ public class User implements UserDetails {
     @Id
     @JsonProperty("_id")
     private String id;
+    @JsonProperty
     @Version
     private long version;
+    @JsonProperty
     private String username;
+    @JsonProperty
     private String password;
+    @JsonProperty
     private String authority;
+    @JsonProperty
     private boolean isEnabled;
+    @JsonProperty
     private String salt;
+    @JsonProperty
     private Updated updated;
+    @JsonProperty
     private Created created;
 
     public String getId() {

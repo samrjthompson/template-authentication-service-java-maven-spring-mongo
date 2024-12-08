@@ -1,0 +1,6 @@
+{
+  "username": "bob@example.com",
+  "password": "password",
+  "authority": "read",
+  "isEnabled": "false"
+}

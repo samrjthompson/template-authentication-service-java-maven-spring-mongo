@@ -1,7 +1,11 @@
 package org.example.security;
 
+import static org.example.Main.NAMESPACE;
+
 import java.util.List;
 import org.example.model.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -13,6 +17,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class CustomAuthenticationProvider implements AuthenticationProvider {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(NAMESPACE);
     private static final List<Class<?>> LIST_OF_SUPPORTED_AUTH_TYPES =
             List.of(UsernamePasswordAuthenticationToken.class);
 
@@ -36,6 +41,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         if (passwordEncoder.matches(saltedPassword, user.getPassword())) {
             return new UsernamePasswordAuthenticationToken(username, password, user.getAuthorities());
         } else {
+            LOGGER.error("Bad credentials");
             throw new BadCredentialsException("Bad credentials");
         }
     }

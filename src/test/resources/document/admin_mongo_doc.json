@@ -1,0 +1,17 @@
+{
+  "_id" : "YWRtaW4",
+  "version" : 1,
+  "username" : "admin",
+  "password" : "40edcccce15a5dbf20f74dcae1591dcc36ba59b14f4176f99eb14fef9a258cd20755cca96c0e5421b4dd1a87d875a7c111946ffe34416ffba1db931ab18d8",
+  "authority" : "admin",
+  "isEnabled" : true,
+  "salt" : "5169d12af4b0f355",
+  "updated" : {
+    "at" : "2024-12-07T14:37:50.920Z",
+    "by" : "test"
+  },
+  "created" : {
+    "at" : "2024-12-07T14:37:50.920Z",
+    "by" : "test"
+  }
+}
