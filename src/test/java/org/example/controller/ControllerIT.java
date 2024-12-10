@@ -82,7 +82,7 @@ class ControllerIT {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    private String hashedPassword;
+    private String expectedHashedPassword;
 
     @MockitoBean
     private Supplier<Instant> instantSupplier;
@@ -108,7 +108,7 @@ class ControllerIT {
         final String adminUser = IOUtils.resourceToString("/document/admin_mongo_doc.json", StandardCharsets.UTF_8);
         mongoTemplate.insert(objectMapper.readValue(adminUser, User.class));
 
-        hashedPassword = passwordEncoder.encode(RAW_PASSWORD + SALT);
+        expectedHashedPassword = passwordEncoder.encode(RAW_PASSWORD + SALT);
     }
 
     @Test
@@ -119,7 +119,7 @@ class ControllerIT {
         String expectedDocument = IOUtils.resourceToString("/document/expected_user_doc.json", StandardCharsets.UTF_8);
         expectedDocument = expectedDocument
                 .replaceAll("<instant_now>", NOW.toString())
-                .replaceAll("<password>", hashedPassword);
+                .replaceAll("<password>", expectedHashedPassword);
 
         // when
         ResultActions result = mockMvc.perform(post(REGISTER_ENDPOINT)
@@ -185,7 +185,7 @@ class ControllerIT {
                 .enabled(true)
                 .authority("read")
                 .salt(SALT)
-                .password(hashedPassword)
+                .password(expectedHashedPassword)
                 .version(1L)
                 .created(new Created()
                         .by(REQUEST_ID)
@@ -194,9 +194,9 @@ class ControllerIT {
                         .by(REQUEST_ID)
                         .at(NOW)));
 
-        hashedPassword = passwordEncoder.encode(args.expectedDocument.getPassword() + SALT);
+        expectedHashedPassword = passwordEncoder.encode(args.expectedDocument.getPassword() + SALT);
         final String requestBody = objectMapper.writeValueAsString(args.requestBody);
-        args.expectedDocument.password(hashedPassword);
+        args.expectedDocument.password(expectedHashedPassword);
 
         // when
         ResultActions result = mockMvc.perform(patch(REGISTER_ENDPOINT)
