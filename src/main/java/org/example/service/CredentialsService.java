@@ -37,18 +37,18 @@ public class CredentialsService {
         UserAuthorities.validate(requestBody.authority());
 
         final String username = requestBody.username();
-        final String id = EncoderUtils.encodeUsernameIntoMongoId(username);
+        final String id = EncoderUtils.urlSafeBase64Encode(username);
         Optional.ofNullable(repository.findById(id))
                 .ifPresentOrElse(user -> {
                     LOGGER.error(FAILED_INSERT_MSG, username);
                     throw new ConflictException("Username already present in DB");
-                }, () -> repository.insert(credentialsRequestMapper.mapNewUser(requestBody)));
+                }, () -> repository.insert(credentialsRequestMapper.mapNewUser(id, requestBody)));
     }
 
     public void updateCredentials(CredentialsRequest requestBody) {
         LOGGER.info("Updating credentials");
         final String username = requestBody.username();
-        final String id = EncoderUtils.encodeUsernameIntoMongoId(username);
+        final String id = EncoderUtils.urlSafeBase64Encode(username);
         Optional.ofNullable(repository.findById(id))
                 .ifPresentOrElse(user -> {
                     LOGGER.info("User found - updating credentials");

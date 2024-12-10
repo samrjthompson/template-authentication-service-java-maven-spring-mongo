@@ -26,7 +26,7 @@ public class User implements UserDetails {
     @JsonProperty
     private String authority;
     @JsonProperty
-    private boolean isEnabled;
+    private boolean enabled;
     @JsonProperty
     private String salt;
     @JsonProperty
@@ -40,6 +40,15 @@ public class User implements UserDetails {
 
     public User id(String id) {
         this.id = id;
+        return this;
+    }
+
+    public long getVersion() {
+        return version;
+    }
+
+    public User version(long version) {
+        this.version = version;
         return this;
     }
 
@@ -63,7 +72,7 @@ public class User implements UserDetails {
     }
 
     public User enabled(boolean enabled) {
-        isEnabled = enabled;
+        this.enabled = enabled;
         return this;
     }
 
@@ -105,6 +114,7 @@ public class User implements UserDetails {
     }
 
     @Override
+    @JsonProperty
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(() -> authority);
     }
@@ -126,7 +136,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return isEnabled;
+        return enabled;
     }
 
     @Override
@@ -135,14 +145,15 @@ public class User implements UserDetails {
             return false;
         }
         User user = (User) o;
-        return isEnabled == user.isEnabled && Objects.equals(id, user.id) && Objects.equals(username,
-                user.username) && Objects.equals(password, user.password) && Objects.equals(authority,
-                user.authority) && Objects.equals(salt, user.salt) && Objects.equals(updated,
-                user.updated) && Objects.equals(created, user.created);
+        return version == user.version && enabled == user.enabled && Objects.equals(id,
+                user.id) && Objects.equals(username, user.username) && Objects.equals(password,
+                user.password) && Objects.equals(authority, user.authority) && Objects.equals(salt,
+                user.salt) && Objects.equals(updated, user.updated) && Objects.equals(created,
+                user.created);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, username, password, authority, isEnabled, salt, updated, created);
+        return Objects.hash(id, version, username, password, authority, enabled, salt, updated, created);
     }
 }

@@ -31,7 +31,7 @@ class CredentialsServiceTest {
     private static final String AUTHORITY = "read";
     private static final String INVALID_AUTHORITY = "invalid_authority";
     private static final String USERNAME = "bill@example.com";
-    private static final String ENCODED_USERNAME = EncoderUtils.encodeUsernameIntoMongoId(USERNAME);
+    private static final String ENCODED_USERNAME = EncoderUtils.urlSafeBase64Encode(USERNAME);
 
     @InjectMocks
     private CredentialsService service;
@@ -56,7 +56,7 @@ class CredentialsServiceTest {
         when(requestBody.authority()).thenReturn(AUTHORITY);
         when(requestBody.username()).thenReturn(USERNAME);
         when(repository.findById(anyString())).thenReturn(null);
-        when(credentialsRequestMapper.mapNewUser(any())).thenReturn(user);
+        when(credentialsRequestMapper.mapNewUser(anyString(), any())).thenReturn(user);
 
         // when
         service.insertCredentials(requestBody);

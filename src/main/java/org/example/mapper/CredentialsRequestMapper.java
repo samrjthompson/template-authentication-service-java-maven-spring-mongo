@@ -10,7 +10,6 @@ import org.example.model.Created;
 import org.example.model.Updated;
 import org.example.model.User;
 import org.example.model.request.CredentialsRequest;
-import org.example.util.EncoderUtils;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
@@ -25,10 +24,7 @@ public class CredentialsRequestMapper {
         this.instantSupplier = instantSupplier;
     }
 
-    public User mapNewUser(CredentialsRequest credentialsRequest) {
-        final String username = credentialsRequest.username();
-        final String encodedId = EncoderUtils.encodeUsernameIntoMongoId(username);
-
+    public User mapNewUser(final String encodedId, CredentialsRequest credentialsRequest) {
         Map<String, String> credentialsMap = passwordGenerator.generateHashedPasswordWithSalt(
                 credentialsRequest.password());
 
@@ -36,7 +32,7 @@ public class CredentialsRequestMapper {
 
         return new User()
                 .id(encodedId)
-                .username(username)
+                .username(credentialsRequest.username())
                 .password(credentialsMap.get(PASSWORD_KEY))
                 .salt(credentialsMap.get(SALT_KEY))
                 .authority(credentialsRequest.authority())

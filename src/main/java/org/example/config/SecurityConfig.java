@@ -1,10 +1,10 @@
 package org.example.config;
 
 import java.util.List;
+import org.example.model.UserAuthorities;
 import org.example.security.CsrfTokenLogger;
 import org.example.security.RequestValidationFilter;
 import org.example.security.Sha512PasswordEncoder;
-import org.example.model.UserAuthorities;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

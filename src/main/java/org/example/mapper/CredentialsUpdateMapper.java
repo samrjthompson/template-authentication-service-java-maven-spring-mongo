@@ -37,7 +37,7 @@ public class CredentialsUpdateMapper {
             UserAuthorities.validate(credentialsRequest.authority());
             update.set("authority", credentialsRequest.authority());
         }
-        update.set("isEnabled", credentialsRequest.isEnabled());
+        update.set("enabled", credentialsRequest.isEnabled());
         update.set("updated", new Updated()
                 .at(instantSupplier.get())
                 .by(MDC.get("request_id"))

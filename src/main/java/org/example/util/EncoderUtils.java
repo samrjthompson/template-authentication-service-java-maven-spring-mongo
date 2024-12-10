@@ -6,7 +6,7 @@ public class EncoderUtils {
 
     private EncoderUtils() {}
 
-    public static String encodeUsernameIntoMongoId(String username) {
+    public static String urlSafeBase64Encode(String username) {
         return new String(Base64.getUrlEncoder()
                 .withoutPadding()
                 .encode(username.getBytes()));

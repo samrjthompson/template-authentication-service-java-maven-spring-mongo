@@ -26,7 +26,7 @@ public class InMongoUserDetailsService implements UserDetailsService {
 
     @Override
     public User loadUserByUsername(final String username) throws UsernameNotFoundException {
-        final String id = EncoderUtils.encodeUsernameIntoMongoId(username);
+        final String id = EncoderUtils.urlSafeBase64Encode(username);
         return Optional.ofNullable(mongoTemplate.findById(id, User.class))
                 .orElseGet(() -> {
                     final String msg = USERNAME_NOT_FOUND.formatted(username);

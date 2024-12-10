@@ -77,7 +77,7 @@ class CredentialsRequestMapperTest {
                         .by(REQUEST_ID_VALUE));
 
         // when
-        User actual = mapper.mapNewUser(credentialsRequest);
+        User actual = mapper.mapNewUser(ENCODED_USERNAME, credentialsRequest);
 
         // then
         assertEquals(expected, actual);

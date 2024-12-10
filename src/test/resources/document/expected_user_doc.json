@@ -1,0 +1,17 @@
+{
+  "_id": "Ym9iQGV4YW1wbGUuY29t",
+  "version": 1,
+  "username": "bob@example.com",
+  "password": "<password>",
+  "authority": "read",
+  "salt": "salt",
+  "enabled": true,
+  "updated": {
+    "at": "<instant_now>",
+    "by": "ITEST"
+  },
+  "created": {
+    "at": "<instant_now>",
+    "by": "ITEST"
+  }
+}

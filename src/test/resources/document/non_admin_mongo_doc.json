@@ -1,9 +1,9 @@
 {
-  "_id" : "YWRtaW5AZXhhbXBsZS5jb20",
+  "_id" : "bm9uX2FkbWluQGV4YW1wbGUuY29t",
   "version" : 1,
-  "username" : "admin@example.com",
+  "username" : "non_admin@example.com",
   "password" : "40edcccce15a5dbf20f74dcae1591dcc36ba59b14f4176f99eb14fef9a258cd20755cca96c0e5421b4dd1a87d875a7c111946ffe34416ffba1db931ab18d8",
-  "authority" : "admin",
+  "authority" : "write",
   "enabled" : true,
   "salt" : "5169d12af4b0f355",
   "updated" : {
