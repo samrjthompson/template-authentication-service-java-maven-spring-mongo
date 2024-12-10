@@ -6,9 +6,9 @@ public class EncoderUtils {
 
     private EncoderUtils() {}
 
-    public static String urlSafeBase64Encode(String username) {
+    public static String urlSafeBase64Encode(String input) {
         return new String(Base64.getUrlEncoder()
                 .withoutPadding()
-                .encode(username.getBytes()));
+                .encode(input.getBytes()));
     }
 }
