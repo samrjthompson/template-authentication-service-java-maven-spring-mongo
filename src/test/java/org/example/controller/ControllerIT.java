@@ -49,7 +49,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @SpringBootTest
 @WireMockTest(httpPort = 8888)
 class ControllerIT {
-    
+
     static {
         try {
             ADMIN_USER = IOUtils.resourceToString("/document/admin_mongo_doc.json", StandardCharsets.UTF_8);
@@ -88,7 +88,7 @@ class ControllerIT {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    private String expectedHashedPassword;
+    private String hashedPassword;
 
     @MockitoBean
     private Supplier<Instant> instantSupplier;
@@ -113,7 +113,8 @@ class ControllerIT {
         // Set up admin User
         mongoTemplate.insert(objectMapper.readValue(ADMIN_USER, User.class));
 
-        expectedHashedPassword = passwordEncoder.encode(RAW_PASSWORD + SALT);
+        // Prepare stubbing for hashed password
+        hashedPassword = passwordEncoder.encode(RAW_PASSWORD + SALT);
     }
 
     @Test
@@ -122,13 +123,17 @@ class ControllerIT {
         final String requestBody = IOUtils.resourceToString("/request/post_register_request_body.json",
                 StandardCharsets.UTF_8);
         String expectedDocument = IOUtils.resourceToString("/document/expected_user_doc.json", StandardCharsets.UTF_8);
-        expectedDocument = expectedDocument.replaceAll("<instant_now>", NOW.toString())
-                .replaceAll("<password>", expectedHashedPassword);
+        expectedDocument = expectedDocument
+                .replaceAll("<instant_now>", NOW.toString())
+                .replaceAll("<password>", hashedPassword);
 
         // when
         ResultActions result = mockMvc.perform(
-                post(REGISTER_ENDPOINT).header("x-request-id", REQUEST_ID).header("Authorization", VALID_ADMIN_AUTH)
-                        .content(requestBody).contentType(MediaType.APPLICATION_JSON));
+                post(REGISTER_ENDPOINT)
+                        .header("x-request-id", REQUEST_ID)
+                        .header("Authorization", VALID_ADMIN_AUTH)
+                        .content(requestBody)
+                        .contentType(MediaType.APPLICATION_JSON));
 
         // then
         result.andExpect(MockMvcResultMatchers.status().isOk());
@@ -140,14 +145,18 @@ class ControllerIT {
 
     @ParameterizedTest
     @MethodSource("unauthorisedSources")
-    void shouldFailRegisteringNewUserCredentialsWhenAdminCredentialsNotRecognised(final String auth) throws Exception {
+    void shouldFailRegisteringNewUserCredentialsWhenAdminCredentialsNotRecognised(final String invalidAuth)
+            throws Exception {
         // given
         final String requestBody = IOUtils.resourceToString("/request/post_register_request_body.json",
                 StandardCharsets.UTF_8);
         // when
         ResultActions result = mockMvc.perform(
-                post(REGISTER_ENDPOINT).header("x-request-id", REQUEST_ID).header("Authorization", auth)
-                        .content(requestBody).contentType(MediaType.APPLICATION_JSON));
+                post(REGISTER_ENDPOINT)
+                        .header("x-request-id", REQUEST_ID)
+                        .header("Authorization", invalidAuth)
+                        .content(requestBody)
+                        .contentType(MediaType.APPLICATION_JSON));
 
         // then
         result.andExpect(MockMvcResultMatchers.status().isUnauthorized());
@@ -164,9 +173,12 @@ class ControllerIT {
         final String requestBody = IOUtils.resourceToString("/request/post_register_request_body.json",
                 StandardCharsets.UTF_8);
         // when
-        ResultActions result = mockMvc.perform(post(REGISTER_ENDPOINT).header("x-request-id", REQUEST_ID)
-                .header("Authorization", NO_PERMISSIONS_ADMIN_AUTH).content(requestBody)
-                .contentType(MediaType.APPLICATION_JSON));
+        ResultActions result = mockMvc
+                .perform(post(REGISTER_ENDPOINT)
+                        .header("x-request-id", REQUEST_ID)
+                        .header("Authorization", NO_PERMISSIONS_ADMIN_AUTH)
+                        .content(requestBody)
+                        .contentType(MediaType.APPLICATION_JSON));
 
         // then
         result.andExpect(MockMvcResultMatchers.status().isForbidden());
@@ -177,18 +189,35 @@ class ControllerIT {
     @MethodSource("validPatchRequests")
     void shouldSuccessfullyUpdateExistingUserCredentials(PatchRequestArgs args) throws Exception {
         // given
-        mongoTemplate.insert(new User().id(EncoderUtils.urlSafeBase64Encode(USERNAME)).username(USERNAME).enabled(true)
-                .authority("read").salt(SALT).password(expectedHashedPassword).version(1L)
-                .created(new Created().by(REQUEST_ID).at(NOW)).updated(new Updated().by(REQUEST_ID).at(NOW)));
+        mongoTemplate.insert(new User()
+                .id(EncoderUtils.urlSafeBase64Encode(USERNAME))
+                .username(USERNAME)
+                .enabled(true)
+                .authority("read")
+                .salt(SALT)
+                .password(hashedPassword)
+                .version(1L)
+                .created(new Created()
+                        .by(REQUEST_ID)
+                        .at(NOW))
+                .updated(new Updated()
+                        .by(REQUEST_ID)
+                        .at(NOW)));
 
-        expectedHashedPassword = passwordEncoder.encode(args.expectedDocument.getPassword() + SALT);
-        final String requestBody = objectMapper.writeValueAsString(args.requestBody);
+        // This changes the expected document's password from its raw form to its hashed form
+        final String rawPassword = args.expectedDocument.getPassword();
+        final String expectedHashedPassword = passwordEncoder.encode(rawPassword + SALT);
         args.expectedDocument.password(expectedHashedPassword);
 
+        final String requestBody = objectMapper.writeValueAsString(args.requestBody);
+
         // when
-        ResultActions result = mockMvc.perform(
-                patch(REGISTER_ENDPOINT).header("x-request-id", REQUEST_ID).header("Authorization", VALID_ADMIN_AUTH)
-                        .content(requestBody).contentType(MediaType.APPLICATION_JSON));
+        ResultActions result = mockMvc
+                .perform(patch(REGISTER_ENDPOINT)
+                        .header("x-request-id", REQUEST_ID)
+                        .header("Authorization", VALID_ADMIN_AUTH)
+                        .content(requestBody)
+                        .contentType(MediaType.APPLICATION_JSON));
 
         // then
         result.andExpect(MockMvcResultMatchers.status().isOk());
@@ -208,31 +237,91 @@ class ControllerIT {
     }
 
     private static Stream<Arguments> validPatchRequests() {
-        return Stream.of(Arguments.of(Named.of("Change all details", PatchRequestArgs.builder().credentialsRequest(
-                        CredentialsRequest.builder().username(USERNAME).password("new_password").authority("write").build())
-                .expectedDocument(
-                        new User().id(EncoderUtils.urlSafeBase64Encode(USERNAME)).username(USERNAME).enabled(true)
-                                .authority("write").salt(SALT).password("new_password").version(2L)
-                                .created(new Created().by(REQUEST_ID).at(NOW))
-                                .updated(new Updated().by(REQUEST_ID).at(NOW))).build())), Arguments.of(
-                Named.of("Change password only", PatchRequestArgs.builder().credentialsRequest(
-                                CredentialsRequest.builder().username(USERNAME).password("new_password").build())
-                        .expectedDocument(new User().id(EncoderUtils.urlSafeBase64Encode(USERNAME)).username(USERNAME)
-                                .enabled(true).authority("read").salt(SALT).password("new_password").version(2L)
-                                .created(new Created().by(REQUEST_ID).at(NOW))
-                                .updated(new Updated().by(REQUEST_ID).at(NOW))).build())), Arguments.of(
-                Named.of("Change authority only", PatchRequestArgs.builder()
-                        .credentialsRequest(CredentialsRequest.builder().username(USERNAME).authority("write").build())
-                        .expectedDocument(new User().id(EncoderUtils.urlSafeBase64Encode(USERNAME)).username(USERNAME)
-                                .enabled(true).authority("write").salt(SALT).password(RAW_PASSWORD).version(2L)
-                                .created(new Created().by(REQUEST_ID).at(NOW))
-                                .updated(new Updated().by(REQUEST_ID).at(NOW))).build())), Arguments.of(
-                Named.of("Change isEnabled only", PatchRequestArgs.builder()
-                        .credentialsRequest(CredentialsRequest.builder().username(USERNAME).isEnabled(false).build())
-                        .expectedDocument(new User().id(EncoderUtils.urlSafeBase64Encode(USERNAME)).username(USERNAME)
-                                .enabled(false).authority("read").salt(SALT).password(RAW_PASSWORD).version(2L)
-                                .created(new Created().by(REQUEST_ID).at(NOW))
-                                .updated(new Updated().by(REQUEST_ID).at(NOW))).build())));
+        return Stream.of(
+                Arguments.of(
+                        Named.of("Change all details", PatchRequestArgs.builder()
+                                .credentialsRequest(CredentialsRequest.builder()
+                                        .username(USERNAME)
+                                        .password("new_password")
+                                        .authority("write")
+                                        .build())
+                                .expectedDocument(new User()
+                                        .id(EncoderUtils.urlSafeBase64Encode(USERNAME))
+                                        .username(USERNAME)
+                                        .enabled(true)
+                                        .authority("write")
+                                        .salt(SALT)
+                                        .password("new_password")
+                                        .version(2L)
+                                        .created(new Created()
+                                                .by(REQUEST_ID)
+                                                .at(NOW))
+                                        .updated(new Updated()
+                                                .by(REQUEST_ID)
+                                                .at(NOW)))
+                                .build())),
+                Arguments.of(
+                        Named.of("Change password only", PatchRequestArgs.builder()
+                                .credentialsRequest(CredentialsRequest.builder()
+                                        .username(USERNAME)
+                                        .password("new_password")
+                                        .build())
+                                .expectedDocument(new User()
+                                        .id(EncoderUtils.urlSafeBase64Encode(USERNAME))
+                                        .username(USERNAME)
+                                        .enabled(true)
+                                        .authority("read")
+                                        .salt(SALT)
+                                        .password("new_password")
+                                        .version(2L)
+                                        .created(new Created()
+                                                .by(REQUEST_ID)
+                                                .at(NOW))
+                                        .updated(new Updated()
+                                                .by(REQUEST_ID)
+                                                .at(NOW)))
+                                .build())),
+                Arguments.of(
+                        Named.of("Change authority only", PatchRequestArgs.builder()
+                                .credentialsRequest(CredentialsRequest.builder()
+                                        .username(USERNAME)
+                                        .authority("write")
+                                        .build())
+                                .expectedDocument(new User()
+                                        .id(EncoderUtils.urlSafeBase64Encode(USERNAME))
+                                        .username(USERNAME)
+                                        .enabled(true)
+                                        .authority("write")
+                                        .salt(SALT)
+                                        .password(RAW_PASSWORD)
+                                        .version(2L)
+                                        .created(new Created()
+                                                .by(REQUEST_ID)
+                                                .at(NOW))
+                                        .updated(new Updated()
+                                                .by(REQUEST_ID)
+                                                .at(NOW)))
+                                .build())),
+                Arguments.of(
+                        Named.of("Change isEnabled only", PatchRequestArgs.builder()
+                                .credentialsRequest(CredentialsRequest.builder()
+                                        .username(USERNAME)
+                                        .isEnabled(false)
+                                        .build())
+                                .expectedDocument(new User()
+                                        .id(EncoderUtils.urlSafeBase64Encode(USERNAME))
+                                        .username(USERNAME)
+                                        .enabled(false)
+                                        .authority("read")
+                                        .salt(SALT).password(RAW_PASSWORD)
+                                        .version(2L)
+                                        .created(new Created()
+                                                .by(REQUEST_ID)
+                                                .at(NOW))
+                                        .updated(new Updated()
+                                                .by(REQUEST_ID)
+                                                .at(NOW)))
+                                .build())));
     }
 
     private record PatchRequestArgs(CredentialsRequest requestBody, User expectedDocument) {
