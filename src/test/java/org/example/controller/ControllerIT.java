@@ -68,6 +68,7 @@ class ControllerIT {
     private static final String USERNAME = "bob@example.com";
     private static final String ENCODED_USERNAME = EncoderUtils.urlSafeBase64Encode(USERNAME);
     private static final String RAW_PASSWORD = "password";
+    private static final String UPDATED_RAW_PASSWORD = "new_password";
     private static final String SALT = "salt";
     private static final String VALID_ADMIN_AUTH = encodeBasicAuth("admin@example.com", RAW_PASSWORD);
     private static final String NO_PERMISSIONS_ADMIN_AUTH = encodeBasicAuth("non_admin@example.com", RAW_PASSWORD);
@@ -242,7 +243,7 @@ class ControllerIT {
                         Named.of("Change all details", PatchRequestArgs.builder()
                                 .credentialsRequest(CredentialsRequest.builder()
                                         .username(USERNAME)
-                                        .password("new_password")
+                                        .password(UPDATED_RAW_PASSWORD)
                                         .authority("write")
                                         .build())
                                 .expectedDocument(new User()
@@ -251,7 +252,7 @@ class ControllerIT {
                                         .enabled(true)
                                         .authority("write")
                                         .salt(SALT)
-                                        .password("new_password")
+                                        .password(UPDATED_RAW_PASSWORD) // Hashed and changed during the test
                                         .version(2L)
                                         .created(new Created()
                                                 .by(REQUEST_ID)
@@ -264,7 +265,7 @@ class ControllerIT {
                         Named.of("Change password only", PatchRequestArgs.builder()
                                 .credentialsRequest(CredentialsRequest.builder()
                                         .username(USERNAME)
-                                        .password("new_password")
+                                        .password(UPDATED_RAW_PASSWORD)
                                         .build())
                                 .expectedDocument(new User()
                                         .id(EncoderUtils.urlSafeBase64Encode(USERNAME))
@@ -272,7 +273,7 @@ class ControllerIT {
                                         .enabled(true)
                                         .authority("read")
                                         .salt(SALT)
-                                        .password("new_password")
+                                        .password(UPDATED_RAW_PASSWORD) // Hashed and changed during the test
                                         .version(2L)
                                         .created(new Created()
                                                 .by(REQUEST_ID)
@@ -313,7 +314,8 @@ class ControllerIT {
                                         .username(USERNAME)
                                         .enabled(false)
                                         .authority("read")
-                                        .salt(SALT).password(RAW_PASSWORD)
+                                        .salt(SALT)
+                                        .password(RAW_PASSWORD)
                                         .version(2L)
                                         .created(new Created()
                                                 .by(REQUEST_ID)
