@@ -123,8 +123,8 @@ class ControllerIT {
         // given
         final String requestBody = IOUtils.resourceToString("/request/post_register_request_body.json",
                 StandardCharsets.UTF_8);
-        String expectedDocument = IOUtils.resourceToString("/document/expected_user_doc.json", StandardCharsets.UTF_8);
-        expectedDocument = expectedDocument
+        final String expectedDocument = IOUtils.resourceToString("/document/expected_user_doc.json",
+                        StandardCharsets.UTF_8)
                 .replaceAll("<instant_now>", NOW.toString())
                 .replaceAll("<password>", hashedPassword);
 
@@ -206,8 +206,8 @@ class ControllerIT {
                         .at(NOW)));
 
         // This changes the expected document's password from its raw form to its hashed form
-        final String rawPassword = args.expectedDocument.getPassword();
-        final String expectedHashedPassword = passwordEncoder.encode(rawPassword + SALT);
+        final String rawExistingPassword = args.expectedDocument.getPassword();
+        final String expectedHashedPassword = passwordEncoder.encode(rawExistingPassword + SALT);
         args.expectedDocument.password(expectedHashedPassword);
 
         final String requestBody = objectMapper.writeValueAsString(args.requestBody);
@@ -240,90 +240,94 @@ class ControllerIT {
     private static Stream<Arguments> validPatchRequests() {
         return Stream.of(
                 Arguments.of(
-                        Named.of("Change all details", PatchRequestArgs.builder()
-                                .credentialsRequest(CredentialsRequest.builder()
-                                        .username(USERNAME)
-                                        .password(UPDATED_RAW_PASSWORD)
-                                        .authority("write")
-                                        .build())
-                                .expectedDocument(new User()
-                                        .id(EncoderUtils.urlSafeBase64Encode(USERNAME))
-                                        .username(USERNAME)
-                                        .enabled(true)
-                                        .authority("write")
-                                        .salt(SALT)
-                                        .password(UPDATED_RAW_PASSWORD) // Hashed and changed during the test
-                                        .version(2L)
-                                        .created(new Created()
-                                                .by(REQUEST_ID)
-                                                .at(NOW))
-                                        .updated(new Updated()
-                                                .by(REQUEST_ID)
-                                                .at(NOW)))
-                                .build())),
+                        Named.of("Change all details",
+                                PatchRequestArgs.builder()
+                                        .credentialsRequest(CredentialsRequest.builder()
+                                                .username(USERNAME)
+                                                .password(UPDATED_RAW_PASSWORD)
+                                                .authority("write")
+                                                .build())
+                                        .expectedDocument(new User()
+                                                .id(EncoderUtils.urlSafeBase64Encode(USERNAME))
+                                                .username(USERNAME)
+                                                .enabled(true)
+                                                .authority("write")
+                                                .salt(SALT)
+                                                .password(UPDATED_RAW_PASSWORD) // Hashed and changed during the test
+                                                .version(2L)
+                                                .created(new Created()
+                                                        .by(REQUEST_ID)
+                                                        .at(NOW))
+                                                .updated(new Updated()
+                                                        .by(REQUEST_ID)
+                                                        .at(NOW)))
+                                        .build())),
                 Arguments.of(
-                        Named.of("Change password only", PatchRequestArgs.builder()
-                                .credentialsRequest(CredentialsRequest.builder()
-                                        .username(USERNAME)
-                                        .password(UPDATED_RAW_PASSWORD)
-                                        .build())
-                                .expectedDocument(new User()
-                                        .id(EncoderUtils.urlSafeBase64Encode(USERNAME))
-                                        .username(USERNAME)
-                                        .enabled(true)
-                                        .authority("read")
-                                        .salt(SALT)
-                                        .password(UPDATED_RAW_PASSWORD) // Hashed and changed during the test
-                                        .version(2L)
-                                        .created(new Created()
-                                                .by(REQUEST_ID)
-                                                .at(NOW))
-                                        .updated(new Updated()
-                                                .by(REQUEST_ID)
-                                                .at(NOW)))
-                                .build())),
+                        Named.of("Change password only",
+                                PatchRequestArgs.builder()
+                                        .credentialsRequest(CredentialsRequest.builder()
+                                                .username(USERNAME)
+                                                .password(UPDATED_RAW_PASSWORD)
+                                                .build())
+                                        .expectedDocument(new User()
+                                                .id(EncoderUtils.urlSafeBase64Encode(USERNAME))
+                                                .username(USERNAME)
+                                                .enabled(true)
+                                                .authority("read")
+                                                .salt(SALT)
+                                                .password(UPDATED_RAW_PASSWORD) // Hashed and changed during the test
+                                                .version(2L)
+                                                .created(new Created()
+                                                        .by(REQUEST_ID)
+                                                        .at(NOW))
+                                                .updated(new Updated()
+                                                        .by(REQUEST_ID)
+                                                        .at(NOW)))
+                                        .build())),
                 Arguments.of(
-                        Named.of("Change authority only", PatchRequestArgs.builder()
-                                .credentialsRequest(CredentialsRequest.builder()
-                                        .username(USERNAME)
-                                        .authority("write")
-                                        .build())
-                                .expectedDocument(new User()
-                                        .id(EncoderUtils.urlSafeBase64Encode(USERNAME))
-                                        .username(USERNAME)
-                                        .enabled(true)
-                                        .authority("write")
-                                        .salt(SALT)
-                                        .password(RAW_PASSWORD)
-                                        .version(2L)
-                                        .created(new Created()
-                                                .by(REQUEST_ID)
-                                                .at(NOW))
-                                        .updated(new Updated()
-                                                .by(REQUEST_ID)
-                                                .at(NOW)))
-                                .build())),
+                        Named.of("Change authority only",
+                                PatchRequestArgs.builder()
+                                        .credentialsRequest(CredentialsRequest.builder()
+                                                .username(USERNAME)
+                                                .authority("write")
+                                                .build())
+                                        .expectedDocument(new User()
+                                                .id(EncoderUtils.urlSafeBase64Encode(USERNAME))
+                                                .username(USERNAME)
+                                                .enabled(true)
+                                                .authority("write")
+                                                .salt(SALT)
+                                                .password(RAW_PASSWORD) // Hashed and changed during the test
+                                                .version(2L)
+                                                .created(new Created()
+                                                        .by(REQUEST_ID)
+                                                        .at(NOW))
+                                                .updated(new Updated()
+                                                        .by(REQUEST_ID)
+                                                        .at(NOW)))
+                                        .build())),
                 Arguments.of(
-                        Named.of("Change isEnabled only", PatchRequestArgs.builder()
-                                .credentialsRequest(CredentialsRequest.builder()
-                                        .username(USERNAME)
-                                        .isEnabled(false)
-                                        .build())
-                                .expectedDocument(new User()
-                                        .id(EncoderUtils.urlSafeBase64Encode(USERNAME))
-                                        .username(USERNAME)
-                                        .enabled(false)
-                                        .authority("read")
-                                        .salt(SALT)
-                                        .password(RAW_PASSWORD)
-                                        .version(2L)
-                                        .created(new Created()
-                                                .by(REQUEST_ID)
-                                                .at(NOW))
-                                        .updated(new Updated()
-                                                .by(REQUEST_ID)
-                                                .at(NOW)))
-                                .build())));
+                        Named.of("Change isEnabled only",
+                                PatchRequestArgs.builder()
+                                        .credentialsRequest(CredentialsRequest.builder()
+                                                .username(USERNAME)
+                                                .isEnabled(false)
+                                                .build())
+                                        .expectedDocument(new User()
+                                                .id(EncoderUtils.urlSafeBase64Encode(USERNAME))
+                                                .username(USERNAME)
+                                                .enabled(false)
+                                                .authority("read")
+                                                .salt(SALT)
+                                                .password(RAW_PASSWORD) // Hashed and changed during the test
+                                                .version(2L)
+                                                .created(new Created()
+                                                        .by(REQUEST_ID)
+                                                        .at(NOW))
+                                                .updated(new Updated()
+                                                        .by(REQUEST_ID)
+                                                        .at(NOW)))
+                                        .build())));
     }
 
     private record PatchRequestArgs(CredentialsRequest requestBody, User expectedDocument) {
