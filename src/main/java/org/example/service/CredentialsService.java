@@ -14,6 +14,7 @@ import org.example.util.EncoderUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 @Component
 public class CredentialsService {
@@ -34,9 +35,10 @@ public class CredentialsService {
 
     public void insertCredentials(CredentialsRequest requestBody) {
         LOGGER.info("Inserting credentials");
+        final String username = requestBody.username();
+        UsernameValidator.validate(username);
         UserAuthorities.validate(requestBody.authority());
 
-        final String username = requestBody.username();
         final String id = EncoderUtils.urlSafeBase64Encode(username);
         Optional.ofNullable(repository.findById(id))
                 .ifPresentOrElse(user -> {
@@ -48,6 +50,13 @@ public class CredentialsService {
     public void updateCredentials(CredentialsRequest requestBody) {
         LOGGER.info("Updating credentials");
         final String username = requestBody.username();
+        UsernameValidator.validate(username);
+
+        final String authority = requestBody.authority();
+        if (StringUtils.hasText(authority)) {
+            UserAuthorities.validate(authority);
+        }
+
         final String id = EncoderUtils.urlSafeBase64Encode(username);
         Optional.ofNullable(repository.findById(id))
                 .ifPresentOrElse(user -> {

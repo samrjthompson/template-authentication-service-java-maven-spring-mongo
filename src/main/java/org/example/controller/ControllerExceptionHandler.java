@@ -4,6 +4,7 @@ import static org.example.Main.NAMESPACE;
 
 import org.example.exception.BadAlgorithmException;
 import org.example.exception.BadGatewayException;
+import org.example.exception.BadRequestException;
 import org.example.exception.ConflictException;
 import org.example.exception.InvalidAuthorityException;
 import org.example.exception.NotFoundException;
@@ -61,7 +62,7 @@ public class ControllerExceptionHandler {
                 .build();
     }
 
-    @ExceptionHandler(InvalidAuthorityException.class)
+    @ExceptionHandler(value = {BadRequestException.class, InvalidAuthorityException.class})
     public ResponseEntity<Void> handleBadRequestException(Exception ex) {
         LOGGER.error("400 Bad request exception", ex);
         return ResponseEntity

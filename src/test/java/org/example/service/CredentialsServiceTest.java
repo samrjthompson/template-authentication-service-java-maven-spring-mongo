@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import org.example.exception.BadRequestException;
 import org.example.exception.ConflictException;
 import org.example.exception.InvalidAuthorityException;
 import org.example.exception.NotFoundException;
@@ -31,6 +32,7 @@ class CredentialsServiceTest {
     private static final String AUTHORITY = "read";
     private static final String INVALID_AUTHORITY = "invalid_authority";
     private static final String USERNAME = "bill@example.com";
+    private static final String INVALID_USERNAME = "bill12345";
     private static final String ENCODED_USERNAME = EncoderUtils.urlSafeBase64Encode(USERNAME);
 
     @InjectMocks
@@ -82,8 +84,22 @@ class CredentialsServiceTest {
     }
 
     @Test
-    void shouldFailAuthorityValidationWhenAuthorityIsInvalid() {
+    void shouldFailUsernameValidationWhenUsernameDoesNotMatchRegexDuringInsert() {
         // given
+        when(requestBody.username()).thenReturn(INVALID_USERNAME);
+
+        // when
+        Executable executable = () -> service.insertCredentials(requestBody);
+
+        // then
+        assertThrows(BadRequestException.class, executable);
+        verifyNoInteractions(repository);
+    }
+
+    @Test
+    void shouldFailAuthorityValidationWhenAuthorityIsInvalidDuringInsert() {
+        // given
+        when(requestBody.username()).thenReturn(USERNAME);
         when(requestBody.authority()).thenReturn(INVALID_AUTHORITY);
 
         // when
@@ -123,6 +139,35 @@ class CredentialsServiceTest {
         assertThrows(NotFoundException.class, executable);
         verify(repository).findById(ENCODED_USERNAME);
         verifyNoMoreInteractions(repository);
+        verifyNoInteractions(credentialsUpdateMapper);
+    }
+
+    @Test
+    void shouldFailUsernameValidationWhenUsernameDoesNotMatchRegexDuringUpdate() {
+        // given
+        when(requestBody.username()).thenReturn(INVALID_USERNAME);
+
+        // when
+        Executable executable = () -> service.updateCredentials(requestBody);
+
+        // then
+        assertThrows(BadRequestException.class, executable);
+        verifyNoInteractions(repository);
+        verifyNoInteractions(credentialsUpdateMapper);
+    }
+
+    @Test
+    void shouldFailAuthorityValidationWhenAuthorityIsInvalidDuringUpdate() {
+        // given
+        when(requestBody.username()).thenReturn(USERNAME);
+        when(requestBody.authority()).thenReturn(INVALID_AUTHORITY);
+
+        // when
+        Executable executable = () -> service.updateCredentials(requestBody);
+
+        // then
+        assertThrows(InvalidAuthorityException.class, executable);
+        verifyNoInteractions(repository);
         verifyNoInteractions(credentialsUpdateMapper);
     }
 }

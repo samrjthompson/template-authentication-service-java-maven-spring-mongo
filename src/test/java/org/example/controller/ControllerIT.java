@@ -66,6 +66,8 @@ class ControllerIT {
     private static final Instant NOW = Instant.parse(Instant.now().atOffset(ZoneOffset.UTC).format(INSTANT_FORMATTER));
     private static final String REGISTER_ENDPOINT = "/register";
     private static final String USERNAME = "bob@example.com";
+    private static final String INVALID_USERNAME = "bob12345";
+    private static final String UNRECOGNISED_AUTHORITY = "access_anything";
     private static final String ENCODED_USERNAME = EncoderUtils.urlSafeBase64Encode(USERNAME);
     private static final String RAW_PASSWORD = "password";
     private static final String UPDATED_RAW_PASSWORD = "new_password";
@@ -186,6 +188,46 @@ class ControllerIT {
         assertNull(mongoTemplate.findById(ENCODED_USERNAME, User.class));
     }
 
+    @Test
+    void shouldFailInsertingUserCredentialsWhenUsernameIsInvalid() throws Exception {
+        // given
+        final String requestBody = objectMapper.writeValueAsString(CredentialsRequest.builder()
+                .username(INVALID_USERNAME)
+                .password(UPDATED_RAW_PASSWORD)
+                .build());
+        // when
+        ResultActions result = mockMvc.perform(
+                post(REGISTER_ENDPOINT)
+                        .header("x-request-id", REQUEST_ID)
+                        .header("Authorization", VALID_ADMIN_AUTH)
+                        .content(requestBody)
+                        .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(MockMvcResultMatchers.status().isBadRequest());
+        assertNull(mongoTemplate.findById(EncoderUtils.urlSafeBase64Encode(INVALID_USERNAME), User.class));
+    }
+
+    @Test
+    void shouldFailInsertingUserCredentialsWhenAuthorityIsNotRecognised() throws Exception {
+        // given
+        final String requestBody = objectMapper.writeValueAsString(CredentialsRequest.builder()
+                .username(USERNAME)
+                .authority(UNRECOGNISED_AUTHORITY)
+                .build());
+        // when
+        ResultActions result = mockMvc.perform(
+                post(REGISTER_ENDPOINT)
+                        .header("x-request-id", REQUEST_ID)
+                        .header("Authorization", VALID_ADMIN_AUTH)
+                        .content(requestBody)
+                        .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(MockMvcResultMatchers.status().isBadRequest());
+        assertNull(mongoTemplate.findById(ENCODED_USERNAME, User.class));
+    }
+
     @ParameterizedTest
     @MethodSource("validPatchRequests")
     void shouldSuccessfullyUpdateExistingUserCredentials(PatchRequestArgs args) throws Exception {
@@ -224,6 +266,88 @@ class ControllerIT {
         result.andExpect(MockMvcResultMatchers.status().isOk());
         User actual = mongoTemplate.findById(ENCODED_USERNAME, User.class);
         assertEquals(args.expectedDocument, actual);
+    }
+
+    @ParameterizedTest
+    @MethodSource("unauthorisedSources")
+    void shouldFailUpdatingUserCredentialsWhenAdminCredentialsNotRecognised(final String invalidAuth)
+            throws Exception {
+        // given
+        final String requestBody = IOUtils.resourceToString("/request/patch_request_body.json",
+                StandardCharsets.UTF_8);
+        // when
+        ResultActions result = mockMvc.perform(
+                patch(REGISTER_ENDPOINT)
+                        .header("x-request-id", REQUEST_ID)
+                        .header("Authorization", invalidAuth)
+                        .content(requestBody)
+                        .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(MockMvcResultMatchers.status().isUnauthorized());
+        assertNull(mongoTemplate.findById(ENCODED_USERNAME, User.class));
+    }
+
+    @Test
+    void shouldFailUpdatingUserCredentialsWhenUserDoesNotHaveAdminPermissions() throws Exception {
+        // given
+        final String nonAdminUser = IOUtils.resourceToString("/document/non_admin_mongo_doc.json",
+                StandardCharsets.UTF_8);
+        mongoTemplate.insert(objectMapper.readValue(nonAdminUser, User.class));
+
+        final String requestBody = IOUtils.resourceToString("/request/patch_request_body.json",
+                StandardCharsets.UTF_8);
+        // when
+        ResultActions result = mockMvc
+                .perform(patch(REGISTER_ENDPOINT)
+                        .header("x-request-id", REQUEST_ID)
+                        .header("Authorization", NO_PERMISSIONS_ADMIN_AUTH)
+                        .content(requestBody)
+                        .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(MockMvcResultMatchers.status().isForbidden());
+        assertNull(mongoTemplate.findById(ENCODED_USERNAME, User.class));
+    }
+
+    @Test
+    void shouldFailUpdatingUserCredentialsWhenUsernameIsInvalid() throws Exception {
+        // given
+        final String requestBody = objectMapper.writeValueAsString(CredentialsRequest.builder()
+                .username(INVALID_USERNAME)
+                .password(UPDATED_RAW_PASSWORD)
+                .build());
+        // when
+        ResultActions result = mockMvc.perform(
+                patch(REGISTER_ENDPOINT)
+                        .header("x-request-id", REQUEST_ID)
+                        .header("Authorization", VALID_ADMIN_AUTH)
+                        .content(requestBody)
+                        .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(MockMvcResultMatchers.status().isBadRequest());
+        assertNull(mongoTemplate.findById(EncoderUtils.urlSafeBase64Encode(INVALID_USERNAME), User.class));
+    }
+
+    @Test
+    void shouldFailUpdatingUserCredentialsWhenAuthorityIsNotRecognised() throws Exception {
+        // given
+        final String requestBody = objectMapper.writeValueAsString(CredentialsRequest.builder()
+                .username(USERNAME)
+                .authority(UNRECOGNISED_AUTHORITY)
+                .build());
+        // when
+        ResultActions result = mockMvc.perform(
+                patch(REGISTER_ENDPOINT)
+                        .header("x-request-id", REQUEST_ID)
+                        .header("Authorization", VALID_ADMIN_AUTH)
+                        .content(requestBody)
+                        .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(MockMvcResultMatchers.status().isBadRequest());
+        assertNull(mongoTemplate.findById(ENCODED_USERNAME, User.class));
     }
 
     private static String encodeBasicAuth(final String username, final String password) {
